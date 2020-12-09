@@ -28,24 +28,28 @@ io.on('connection', (socket) => { // השרת מדבר אל הקליינט
         socket.join(user.room)
         
         const welcomeMessage = `welcome ${user.username} to the chat app u are now in room: ${user.room}`
-        socket.emit('message', generateMessage(welcomeMessage)) // רק המשתמש הספציפי שמחובר מהקליינט עצמו יראה את ההודעה
-        socket.broadcast.to(user.room).emit('message', generateMessage(`${user.username} has joined`)) //שולח לכולם הודעה פרט למשתמש שהתחבר כעת.
-
+        socket.emit('message', generateMessage('Admin', welcomeMessage)) // רק המשתמש הספציפי שמחובר מהקליינט עצמו יראה את ההודעה
+        socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined`)) //שולח לכולם הודעה פרט למשתמש שהתחבר כעת.
+        io.to(user.room).emit('roomData', { 
+            room: user.room,
+            users: getUsersInRoom(user.room)
+        })
         cb()
     })
 
     socket.on('sendMessage', (message, cb) => {
+        const user = getUser(socket.id)
         const filter = new Filter()
         if(filter.isProfane(message)){
             return cb('Foul language is not allowed.')
         }
-        io.emit('message', generateMessage(message)) // כל המשתמשים יראו את ההודעה
+        io.to(user.room).emit('message', generateMessage(user.username, message)) // כל המשתמשים יראו את ההודעה
         cb()
     })
 
     socket.on('sendLocation', (coords, cb) => {
-        const url = `https://google.com/maps?q=${coords.latitude},${coords.longitude}`
-        io.to('wow').emit('locationMessage', generateLocationMessage(url)) 
+        const user = getUser(socket.id)
+        io.to(user.room).emit('locationMessage', generateLocationMessage(user.username, `https://google.com/maps?q=${coords.latitude},${coords.longitude}`)) 
         cb('location shared')
     })
     
@@ -53,7 +57,11 @@ io.on('connection', (socket) => { // השרת מדבר אל הקליינט
         const user = removeUser(socket.id)
 
         if(user){
-            io.to(user.room).emit('message', generateMessage(` ${user.username} has left`))
+            io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left`))
+            io.to(user.room).emit('roomData', {
+                room: user.room,
+                users: getUsersInRoom(user.room)
+            })
         }
     })
 })
