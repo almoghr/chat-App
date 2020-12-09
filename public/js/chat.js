@@ -51,7 +51,8 @@ socket.on('message', (message) => {
         createdAt: moment(message.createdAt).format('h:mm a'),
     })
     messages.insertAdjacentHTML('beforeend', html)
-    autoscroll()
+    // fixing git issue with camelcase sensetive
+    autoScroll()
 })
 
 socket.on('locationMessage', (location) => {
@@ -63,7 +64,8 @@ socket.on('locationMessage', (location) => {
         createdAt: moment(location.createdAt).format('h:mm a')
     })
     messages.insertAdjacentHTML('beforeend', html)
-    autoscroll()
+    // fixing git issue with camelcase sensetive
+    autoScroll()
 })
 
 socket.on('roomData', ({ room, users}) => {
